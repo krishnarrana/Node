@@ -1,9 +1,10 @@
-const http = require('http');
-const server = http.createServer(function(req,res){
-    res.writeHead(200,{"Content-Type":"text/plain"});
-    res.end("Hello world")
-})
+const express = require('express');
+const app =express();
 
-server.listen(8080,()=>{
-    console.log('server is running')
+app.get("/", function (req,res) {
+    res.json({
+        message:"Hello world"
+    });
 });
+
+app.listen(process.env.PORT || 8080)
