@@ -1,5 +1,5 @@
 const express = require('express');
-
+const Joi = require('joi');
 const app = express();
 app.use(express.json())
 const courses = [
@@ -23,30 +23,68 @@ app.get('/api/courses', function (req, res) {
 app.get('/api/courses/:id', function (req, res) {
     const course = courses.find(c => c.id === parseInt(req.params.id));
     if (!course) {
-        res.status(404).send('The course was not found with the given id ' + parseInt(req.params.id))
+        return res.status(404).send('The course was not found with the given id ' + parseInt(req.params.id))
     }
     res.send(course)
 });
 app.post('/api/courses', (req, res) => {
-    if (!req.body.name || req.body.name.length < 3) {
-        res.status(400).send('name is required and must be more that 2 charater')
-    } else {
-        const course = {
-            id: courses.length + 1,
-            name: req.body.name
-        }
-        courses.push(course);
-        res.send(course);
+    const { error } = validateCourse(req.body)
+    if (error) {
+        res.status(404).send(error.details[0].message);
+        return;
     }
+    const course = {
+        id: courses.length + 1,
+        name: req.body.name
+    }
+    courses.push(course);
+    res.send(course);
 
 })
 
-app.put('/api/courses/:id', (req, res){
+app.put('/api/courses/:id', (req, res) => {
+    //look up the course
+    //if not existing, return 404
     const course = courses.find(c => c.id === parseInt(req.params.id));
     if (!course) {
-        res.status(404).send('The course was not found with the given id ' + parseInt(req.params.id))
+        return res.status(404).send('The course was not found with the given id ' + parseInt(req.params.id))
     }
+    //validate
+    //if not validate, return 400 - bad request
+    const { error } = validateCourse(req.body);
+    if (error) {
+        res.status(400).send(error.details[0].message);
+        return;
+    }
+    //Updated the course
+    // return the updated course
+    course.name = req.body.name;
+    res.send(course)
 })
+app.delete('/api/courses/:id', (req, res) => {
+    // look up the course
+    // not existing , return 404 not found
+    const course = courses.find(c => c.id === parseInt(req.params.id));
+    console.log('course', course)
+    if (!course) {
+        return res.status(404).send('The course was not found with the given id ' + parseInt(req.params.id))
+    }
+    // delete
+    const index = courses.indexOf(course);
+    courses.splice(index, 1)
+
+    //return
+    res.send(courses)
+})
+function validateCourse(course) {
+    const schema = {
+        name: Joi.string().min(3).required()
+    }
+    return Joi.validate(course, schema);
+}
+
+
+
 app.listen(3000, () => {
     console.log('Listening on port 3000')
 })
