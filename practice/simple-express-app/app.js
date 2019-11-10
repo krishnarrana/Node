@@ -4,10 +4,18 @@ const auth = require('./authentication');
 const Joi = require('joi');
 const morgan = require('morgan');
 const app = express();
+
+console.log('env', process.env.NODE_ENV);
+console.log(app.get('env'))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-app.use(morgan('tiny'));
+
+if (app.get('env') === 'development') {
+    app.use(morgan('tiny'));
+}
+
+
 app.use(log)
 app.use(auth)
 const courses = [
